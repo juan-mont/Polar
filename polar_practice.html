@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador Polar: Caracol con Lazo Interno</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg: #fafafa;
+            --card: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .container { grid-template-columns: 1fr 1.1fr; }
+        }
+
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        header h1 { margin: 0; font-size: 1.6rem; color: var(--primary); }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        canvas { max-width: 100%; background: #ffffff; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .lang-btn { background: #4b5563; font-size: 0.85rem; padding: 6px 12px; width: auto; }
+
+        .math-box {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+            font-size: 1.05rem;
+        }
+
+        .feedback {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 12px;
+            margin-top: 10px;
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .qa-section { background: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .practice-box {
+            background: #fff7ed;
+            border: 1px dashed #f97316;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .btn-reveal {
+            background: #ea580c;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .btn-reveal:hover { background: #c2410c; }
+
+        .practice-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .latex-container {
+            display: inline-block;
+            vertical-align: middle;
+            min-height: 24px;
+        }
+
+        .plain-text-coord {
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 id="txt-title">Explorador Polar: Caracol con Lazo Interno</h1>
+        <button class="btn lang-btn" id="btn-lang" onclick="toggleLang()">EN / ES</button>
+    </header>
+
+    <div class="card">
+        <h2 id="txt-controls">Configuración de la Ecuación</h2>
+        
+        <div id="explorer-controls">
+            <div class="control-group">
+                <label>Parámetro a: <span id="val-a">2</span></label>
+                <input type="range" id="slide-a" min="1" max="5" step="0.5" value="2">
+            </div>
+
+            <div class="control-group">
+                <label>Parámetro b (Lazo interno si b &gt; a): <span id="val-b">4</span></label>
+                <input type="range" id="slide-b" min="1" max="5" step="0.5" value="4">
+            </div>
+
+            <div class="control-group">
+                <label id="txt-lbl-teta">Barrido Angular (&theta;): <span id="val-teta">0.00 rad</span></label>
+                <input type="range" id="slide-teta" min="0" max="6.283" step="0.04" value="6.283">
+            </div>
+        </div>
+
+        <button class="btn" id="btn-practice" onclick="startPractice()">🎯 <span id="txt-btn-practice">Modo Práctica</span></button>
+
+        <div class="practice-box" id="practice-ui">
+            <h3 style="margin-top:0; color:#c2410c;" id="txt-prac-title">¡Reto de Gráfica Polar!</h3>
+            <p id="txt-prac-desc">Coloca 5 puntos sobre el plano polar que pertenezcan a la ecuación:</p>
+            <p style="font-size: 1.2rem; text-align: center; margin: 10px 0;" id="prac-eq" class="latex-container">$$r = 2 + 4 \sin(\theta)$$</p>
+            <p><span id="txt-prac-pts">Puntos correctos:</span> <strong id="prac-count">0</strong> / 5</p>
+            
+            <div class="practice-actions">
+                <button class="btn btn-reveal" style="margin:0;" id="btn-reveal-graph" onclick="revealPracticeGraph()">👁️ <span id="txt-btn-reveal">Revelar Gráfica</span></button>
+                <button class="btn" style="background:#6b7280; margin:0;" id="btn-retry-prac" onclick="generateNewExercise()">🔄 <span id="txt-btn-retry">Intentar Nuevamente</span></button>
+            </div>
+            
+            <button class="btn" style="background:#4b5563; margin-top:5px;" id="btn-exit-prac" onclick="exitPractice()">Volver al Explorador</button>
+        </div>
+
+        <div class="math-box">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <strong><span id="txt-math-eq">Ecuación Polar</span>:</strong> 
+                <span id="math-formula" class="latex-container">$r = 2.0 + 4.0 \sin(\theta)$</span>
+            </div>
+            <div style="margin-top: 12px;" id="box-current-pt">
+                <strong><span id="txt-math-pt">Punto Actual</span> (r, θ):</strong> 
+                <span id="math-point" class="plain-text-coord">(6.00, 0.00 rad)</span>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback-desc">
+            Cargando análisis...
+        </div>
+
+        <div class="qa-section">
+            <h3 style="margin-top: 0;" id="txt-qa-title">Preguntas de Reflexión</h3>
+            <p><strong>1.</strong> <span id="txt-q1">¿Qué ocurre cuando la diferencia entre a y b es mayor?</span></p>
+            <p><strong>2.</strong> <span id="txt-q2">¿Qué ocurre cuando la diferencia entre a y b es menor?</span></p>
+        </div>
+    </div>
+
+    <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="canvas-container">
+            <canvas id="polarCanvas" width="500" height="500"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const langData = {
+        es: {
+            title: "Explorador Polar: Caracol con Lazo Interno",
+            controls: "Configuración de la Ecuación",
+            lbl_teta: "Barrido Angular (&theta;)",
+            btn_practice: "Modo Práctica",
+            prac_title: "¡Reto de Gráfica Polar!",
+            prac_desc: "Haz clic en el plano limpio para colocar 5 puntos válidos de la ecuación:",
+            prac_pts: "Puntos correctos:",
+            math_eq: "Ecuación Polar",
+            math_pt: "Punto Actual",
+            qa_title: "Preguntas de Reflexión",
+            q1: "¿Qué ocurre cuando la diferencia entre a y b es mayor?",
+            q2: "¿Qué ocurre cuando la diferencia entre a y b es menor?",
+            feed_large: "Al aumentar la diferencia (b >> a), el lazo interno crece notablemente y se acerca al tamaño del lazo externo.",
+            feed_small: "Cuando b se acerca a a, el lazo interno se vuelve extremadamente pequeño, tendiendo a convertirse en un nodo o cúspide (cardioide).",
+            btn_reveal: "Revelar Gráfica",
+            btn_retry: "Intentar Nuevamente"
+        },
+        en: {
+            title: "Polar Explorer: Limaçon with Inner Loop",
+            controls: "Equation Settings",
+            lbl_teta: "Angular Sweep (&theta;)",
+            btn_practice: "Practice Mode",
+            prac_title: "Polar Graphing Challenge!",
+            prac_desc: "Click on the clean plane to place 5 valid points belonging to:",
+            prac_pts: "Correct points:",
+            math_eq: "Polar Equation",
+            math_pt: "Current Point",
+            qa_title: "Reflection Questions",
+            q1: "What happens when the difference between a and b is larger?",
+            q2: "What happens when the difference between a and b is smaller?",
+            feed_large: "As the difference increases (b >> a), the inner loop grows significantly, matching more of the outer loop's scale.",
+            feed_small: "When b gets closer to a, the inner loop shrinks substantially, tending toward a cusp (cardioid).",
+            btn_reveal: "Reveal Graph",
+            btn_retry: "Try Again"
+        }
+    };
+
+    let currentLang = 'es';
+    let isPracticeMode = false;
+    let practiceA = 2, practiceB = 4;
+    let targetPointsFound = 0;
+    let forceShowGraph = false; 
+    let userPlacedPoints = [];
+
+    const slideA = document.getElementById('slide-a');
+    const slideB = document.getElementById('slide-b');
+    const slideTeta = document.getElementById('slide-teta');
+    const valA = document.getElementById('val-a');
+    const valB = document.getElementById('val-b');
+    const valTeta = document.getElementById('val-teta');
+    const mathFormula = document.getElementById('math-formula');
+    const mathPoint = document.getElementById('math-point');
+    const feedDesc = document.getElementById('feedback-desc');
+    const canvas = document.getElementById('polarCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadiusValue = 11; 
+    const scale = (canvas.width / 2 - 40) / maxRadiusValue; 
+
+    function getR(a, b, thetaRad) {
+        return a + b * Math.sin(thetaRad);
+    }
+
+    function triggerMathJaxRender() {
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([mathFormula, document.getElementById('prac-eq')]);
+        }
+    }
+
+    function drawPolarGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        for (let r = 2; r <= 10; r += 2) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, r * scale, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(r, centerX + r * scale + 2, centerY - 4);
+        }
+
+        const angles = [
+            { rad: 0, label: "0 rad" },
+            { rad: Math.PI/6, label: "π/6" },
+            { rad: Math.PI/4, label: "π/4" },
+            { rad: Math.PI/3, label: "π/3" },
+            { rad: Math.PI/2, label: "π/2" },
+            { rad: 2*Math.PI/3, label: "2π/3" },
+            { rad: 3*Math.PI/4, label: "3π/4" },
+            { rad: 5*Math.PI/6, label: "5π/6" },
+            { rad: Math.PI, label: "π rad" },
+            { rad: 7*Math.PI/6, label: "7π/6" },
+            { rad: 5*Math.PI/4, label: "5π/4" },
+            { rad: 4*Math.PI/3, label: "4π/3" },
+            { rad: 3*Math.PI/2, label: "3π/2" },
+            { rad: 5*Math.PI/3, label: "5π/3" },
+            { rad: 7*Math.PI/4, label: "7π/4" },
+            { rad: 11*Math.PI/6, label: "11π/6" }
+        ];
+
+        angles.forEach(ang => {
+            ctx.strokeStyle = (ang.rad === 0 || Math.abs(ang.rad - Math.PI/2) < 0.01) ? '#9ca3af' : '#f3f4f6';
+            ctx.lineWidth = (ang.rad === 0 || Math.abs(ang.rad - Math.PI/2) < 0.01) ? 1.5 : 0.5;
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            const endX = centerX + (canvas.width / 2) * Math.cos(ang.rad);
+            const endY = centerY - (canvas.height / 2) * Math.sin(ang.rad);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '11px sans-serif';
+            const textDist = canvas.width / 2 - 22;
+            const textX = centerX + textDist * Math.cos(ang.rad) - 12;
+            const textY = centerY - textDist * Math.sin(ang.rad) + 4;
+            ctx.fillText(ang.label, textX, textY);
+        });
+    }
+
+    function renderCurve() {
+        drawPolarGrid();
+
+        if (isPracticeMode) {
+            if (forceShowGraph) {
+                ctx.strokeStyle = 'rgba(234, 88, 12, 0.5)'; 
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                let first = true;
+                for (let rad = 0; rad <= 2 * Math.PI + 0.01; rad += 0.02) {
+                    const r = getR(practiceA, practiceB, rad);
+                    const x = centerX + r * scale * Math.cos(rad);
+                    const y = centerY - r * scale * Math.sin(rad);
+                    if (first) { ctx.moveTo(x, y); first = false; } 
+                    else { ctx.lineTo(x, y); }
+                }
+                ctx.stroke();
+            }
+
+            userPlacedPoints.forEach(pt => {
+                ctx.fillStyle = pt.valid ? '#10b981' : '#ef4444';
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            return; 
+        }
+
+        const curA = parseFloat(slideA.value);
+        const curB = parseFloat(slideB.value);
+        const maxLimitRad = parseFloat(slideTeta.value);
+
+        ctx.strokeStyle = '#0284c7'; 
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        let first = true;
+        for (let rad = 0; rad <= maxLimitRad + 0.01; rad += 0.02) {
+            const r = getR(curA, curB, rad);
+            const x = centerX + r * scale * Math.cos(rad);
+            const y = centerY - r * scale * Math.sin(rad);
+
+            if (first) { ctx.moveTo(x, y); first = false; } 
+            else { ctx.lineTo(x, y); }
+        }
+        ctx.stroke();
+
+        const currentRad = parseFloat(slideTeta.value);
+        const rPoint = getR(curA, curB, currentRad);
+
+        const pX = centerX + rPoint * scale * Math.cos(currentRad);
+        const pY = centerY - rPoint * scale * Math.sin(currentRad);
+
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(pX, pY);
+        ctx.stroke();
+        ctx.setLineDash([]); 
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(pX, pY, 6, 0, 2 * Math.PI);
+        ctx.fill();
+
+        mathPoint.textContent = `(${rPoint.toFixed(2)}, ${currentRad.toFixed(2)} rad)`;
+    }
+
+    function updateLogic() {
+        if (isPracticeMode) return;
+
+        let a = parseFloat(slideA.value);
+        let b = parseFloat(slideB.value);
+        const tetaRad = parseFloat(slideTeta.value);
+
+        if (b <= a) {
+            b = a + 0.5;
+            slideB.value = b;
+        }
+
+        valA.textContent = a;
+        valB.textContent = b;
+        valTeta.textContent = tetaRad.toFixed(2) + " rad";
+
+        mathFormula.textContent = `$r = ${a.toFixed(1)} + ${b.toFixed(1)} \\sin(\\theta)$`;
+
+        const diff = b - a;
+        if (diff >= 2.5) {
+            feedDesc.textContent = langData[currentLang].feed_large;
+        } else {
+            feedDesc.textContent = langData[currentLang].feed_small;
+        }
+
+        renderCurve();
+        triggerMathJaxRender();
+    }
+
+    function generateNewExercise() {
+        targetPointsFound = 0;
+        forceShowGraph = false; 
+        userPlacedPoints = [];
+        
+        practiceA = Math.floor(Math.random() * 2) + 1; 
+        practiceB = practiceA + Math.floor(Math.random() * 2) + 2; 
+
+        document.getElementById('prac-eq').textContent = `$$r = ${practiceA} + ${practiceB} \\sin(\\theta)$$`;
+        mathFormula.textContent = `$r = ${practiceA}.0 + ${practiceB}.0 \\sin(\\theta)$`;
+        document.getElementById('prac-count').textContent = "0";
+
+        renderCurve(); 
+        triggerMathJaxRender();
+    }
+
+    function startPractice() {
+        isPracticeMode = true;
+        document.getElementById('practice-ui').style.display = 'block';
+        document.getElementById('explorer-controls').style.display = 'none';
+        document.getElementById('btn-practice').style.display = 'none';
+        document.getElementById('box-current-pt').style.display = 'none';
+
+        generateNewExercise(); 
+    }
+
+    function revealPracticeGraph() {
+        forceShowGraph = true;
+        renderCurve();
+    }
+
+    function exitPractice() {
+        isPracticeMode = false;
+        document.getElementById('practice-ui').style.display = 'none';
+        document.getElementById('explorer-controls').style.display = 'block';
+        document.getElementById('btn-practice').style.display = 'block';
+        document.getElementById('box-current-pt').style.display = 'block';
+        updateLogic();
+    }
+
+    canvas.addEventListener('click', (e) => {
+        if (!isPracticeMode || targetPointsFound >= 5) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Distancia absoluta desde el polo (siempre positiva)
+        const dx = clickX - centerX;
+        const dy = centerY - clickY; 
+        const clickedRadius = Math.sqrt(dx*dx + dy*dy) / scale;
+
+        // Ángulo directo del clic en el intervalo [0, 2π)
+        let clickedTheta = Math.atan2(dy, dx);
+        if (clickedTheta < 0) clickedTheta += 2 * Math.PI; 
+
+        // Ángulo opuesto (reflejado por el polo, θ_opuesto = θ + π)
+        let oppositeTheta = (clickedTheta + Math.PI) % (2 * Math.PI);
+
+        // Evaluamos el radio esperado en ambas direcciones angulares posibles
+        const expectedRadiusDirect = getR(practiceA, practiceB, clickedTheta);
+        const expectedRadiusOpposite = getR(practiceA, practiceB, oppositeTheta);
+
+        const tolerance = 0.65; 
+        let isCorrect = false;
+
+        // Validamos Caso 1 (Directo): Radio positivo esperado en el mismo ángulo del clic
+        if (expectedRadiusDirect >= 0 && Math.abs(clickedRadius - expectedRadiusDirect) < tolerance) {
+            isCorrect = true;
+        }
+        // Validamos Caso 2 (Reflejado): Radio negativo esperado en el ángulo opuesto al clic
+        else if (expectedRadiusOpposite < 0 && Math.abs(clickedRadius - Math.abs(expectedRadiusOpposite)) < tolerance) {
+            isCorrect = true;
+        }
+
+        if (isCorrect) {
+            targetPointsFound++;
+            document.getElementById('prac-count').textContent = targetPointsFound;
+            userPlacedPoints.push({ x: clickX, y: clickY, valid: true });
+        } else {
+            userPlacedPoints.push({ x: clickX, y: clickY, valid: false });
+        }
+
+        renderCurve();
+
+        if (targetPointsFound === 5) {
+            alert(currentLang === 'es' ? "🎉 ¡Excelente trabajo en el plano polar!" : "🎉 Excellent work on the polar plane!");
+            exitPractice();
+        }
+    });
+
+    function toggleLang() {
+        currentLang = currentLang === 'es' ? 'en' : 'es';
+        
+        document.getElementById('txt-title').textContent = langData[currentLang].title;
+        document.getElementById('txt-controls').textContent = langData[currentLang].controls;
+        document.getElementById('txt-lbl-teta').innerHTML = langData[currentLang].lbl_teta + ': <span id="val-teta">' + parseFloat(slideTeta.value).toFixed(2) + ' rad</span>';
+        document.getElementById('txt-btn-practice').textContent = langData[currentLang].btn_practice;
+        document.getElementById('txt-prac-title').textContent = langData[currentLang].prac_title;
+        document.getElementById('txt-prac-desc').textContent = langData[currentLang].prac_desc;
+        document.getElementById('txt-prac-pts').textContent = langData[currentLang].prac_pts;
+        document.getElementById('txt-math-eq').textContent = langData[currentLang].math_eq;
+        document.getElementById('txt-math-pt').textContent = langData[currentLang].math_pt;
+        document.getElementById('txt-qa-title').textContent = langData[currentLang].qa_title;
+        document.getElementById('txt-q1').textContent = langData[currentLang].q1;
+        document.getElementById('txt-q2').textContent = langData[currentLang].q2;
+        document.getElementById('txt-btn-reveal').textContent = langData[currentLang].btn_reveal;
+        document.getElementById('txt-btn-retry').textContent = langData[currentLang].btn_retry;
+
+        if (!isPracticeMode) updateLogic();
+        else renderCurve();
+    }
+
+    slideA.addEventListener('input', updateLogic);
+    slideB.addEventListener('input', updateLogic);
+    slideTeta.addEventListener('input', updateLogic);
+
+    setTimeout(updateLogic, 200);
+</script>
+</body>
+</html>
