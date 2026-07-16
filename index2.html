@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=0.8"/><title>Polar Curves</title><link rel="stylesheet" type="text/css" href="scribble.css" title="default"/><link rel="stylesheet" type="text/css" href="manual-style.css" title="default"/><link rel="stylesheet" type="text/css" href="manual-racket.css" title="default"/><script type="text/javascript" src="scribble-common.js"></script><script type="text/javascript">
+(function() {
+  document.write('<link rel="stylesheet" href="katex/katex.min.css" />');
+})();(function() {document.write('<scr' + 'ipt type="text/javascript" src="katex/katex.min.js"></scr' + 'ipt>');})();(function(f) {
+  // A "simple" onLoad function
+  if (window.document.readyState == "complete") {
+    f();
+  } else if (window.document.addEventListener) {
+    window.document.addEventListener("DOMContentLoaded", f, false);
+  } else if (window.attachEvent) {
+    window.attachEvent("onreadystatechange", function() {
+      if (window.document.readyState == "complete") {
+        f();
+      }
+    });
+  } else {
+    var oldLoad = window.onload;
+    if (typeof(oldLoad) == "function") {
+      window.onload = function() {
+        try {
+          oldLoad();
+        } finally {
+          f();
+        }
+      };
+    } else {
+      window.onload = f;
+    }
+  }
+})(function() {
+  // This is an ugly way to change the doctype, in case the scribble document
+  // did not use (with-html5).
+  if (!(document.doctype && document.doctype.publicId == '')) {
+    if (console && console.log) {
+      console.log("Re-wrote the document to use the HTML5 doctype.\n"
+                  + "  Consider using the following declaration:\n"
+                  + "      @title[#:style (with-html5 manual-doc-style)]{…}");
+    }
+    var wholeDoc = '<!doctype HTML>\n' + document.documentElement.outerHTML;
+    document.open();
+    document.clear();
+    document.write(wholeDoc);
+  }
+  var inlineElements = document.getElementsByClassName("texMathInline");
+  for (var i = 0; i < inlineElements.length; i++) {
+    var e = inlineElements[i];
+    katex.render(e.textContent, e, { displayMode:false, throwOnError:false });
+  }
+  var displayElements = document.getElementsByClassName("texMathDisplay");
+  for (var i = 0; i < displayElements.length; i++) {
+    var e = displayElements[i];
+    katex.render(e.textContent, e, { displayMode:true, throwOnError:false });
+  }
+});
+</script><script type="text/javascript" src="manual-racket.js"></script></head><body id="scribble-racket-lang-org"><div class="tocset"><div class="tocview"><div class="tocviewlist tocviewlisttopspace"><div class="tocviewtitle"><table cellspacing="0" cellpadding="0"><tr><td style="width: 1em;"><a href="javascript:void(0);" title="Expand/Collapse" class="tocviewtoggle" onclick="TocviewToggle(this,&quot;tocview_0&quot;);">&#9658;</a></td><td></td><td><a href="" class="tocviewselflink" data-pltdoc="x">Polar Curves</a></td></tr></table></div><div class="tocviewsublistonly" style="display: none;" id="tocview_0"><table cellspacing="0" cellpadding="0"><tr><td align="right">1&nbsp;</td><td><a href="#%28part._.Cartesian___.Polar_.Coordinates%29" class="tocviewlink" data-pltdoc="x">Cartesian &amp; Polar Coordinates</a></td></tr><tr><td align="right">2&nbsp;</td><td><a href="#%28part._.Transformations%29" class="tocviewlink" data-pltdoc="x">Transformations</a></td></tr><tr><td align="right">3&nbsp;</td><td><a href="#%28part._.Circle%29" class="tocviewlink" data-pltdoc="x">Circle</a></td></tr><tr><td align="right">4&nbsp;</td><td><a href="#%28part._.Cardioid%29" class="tocviewlink" data-pltdoc="x">Cardioid</a></td></tr><tr><td align="right">5&nbsp;</td><td><a href="#%28part._.Limason%29" class="tocviewlink" data-pltdoc="x">Limason</a></td></tr><tr><td align="right">6&nbsp;</td><td><a href="#%28part._.Roses%29" class="tocviewlink" data-pltdoc="x">Roses</a></td></tr><tr><td align="right">7&nbsp;</td><td><a href="#%28part._.Practice_your_graphing_skills%29" class="tocviewlink" data-pltdoc="x">Practice your graphing skills</a></td></tr></table></div></div></div><div class="tocsub"><table class="tocsublist" cellspacing="0"><tr><td><span class="tocsublinknumber"></span><a href="#%28part._.Polar_.Curves%29" class="tocsubseclink" data-pltdoc="x">Polar Curves</a></td></tr><tr><td><span class="tocsublinknumber">1<span class="stt">&nbsp;</span></span><a href="#%28part._.Cartesian___.Polar_.Coordinates%29" class="tocsubseclink" data-pltdoc="x">Cartesian &amp; Polar Coordinates</a></td></tr><tr><td><span class="tocsublinknumber">2<span class="stt">&nbsp;</span></span><a href="#%28part._.Transformations%29" class="tocsubseclink" data-pltdoc="x">Transformations</a></td></tr><tr><td><span class="tocsublinknumber">3<span class="stt">&nbsp;</span></span><a href="#%28part._.Circle%29" class="tocsubseclink" data-pltdoc="x">Circle</a></td></tr><tr><td><span class="tocsublinknumber">4<span class="stt">&nbsp;</span></span><a href="#%28part._.Cardioid%29" class="tocsubseclink" data-pltdoc="x">Cardioid</a></td></tr><tr><td><span class="tocsublinknumber">5<span class="stt">&nbsp;</span></span><a href="#%28part._.Limason%29" class="tocsubseclink" data-pltdoc="x">Limason</a></td></tr><tr><td><span class="tocsublinknumber">6<span class="stt">&nbsp;</span></span><a href="#%28part._.Roses%29" class="tocsubseclink" data-pltdoc="x">Roses</a></td></tr><tr><td><span class="tocsublinknumber">7<span class="stt">&nbsp;</span></span><a href="#%28part._.Practice_your_graphing_skills%29" class="tocsubseclink" data-pltdoc="x">Practice your graphing skills</a></td></tr></table></div></div><div class="maincolumn"><div class="main"><div class="versionbox"><span class="versionNoNav">9.2</span></div><section class="SsectionLevel1" id="section 0"><h1 class="heading"><a name="(part._.Polar_.Curves)"></a>Polar Curves<span class="button-group"><a href="#(part._.Polar_.Curves)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h1><div class="SAuthorListBox"><div class="SAuthorList"><p class="author">Juan Monta&#241;o</p></div></div><section class="SsectionLevel2" id="section 1"><h2 class="heading">1<span class="stt">&nbsp;</span><a name="(part._.Cartesian___.Polar_.Coordinates)"></a>Cartesian &amp; Polar Coordinates<span class="button-group"><a href="#(part._.Cartesian___.Polar_.Coordinates)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p><img src="polar_vs_cartesian.png" alt="Contrast between Cartesian and Polar" width="704" height="384"/></p></section><section class="SsectionLevel2" id="section 2"><h2 class="heading">2<span class="stt">&nbsp;</span><a name="(part._.Transformations)"></a>Transformations<span class="button-group"><a href="#(part._.Transformations)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>Example 1: Cartesian to Polar</p><p>Convert <span class="texMathInline">x^2 + y^2 = 1</span> to polar coordinates.</p><p>Using the substitutions <span class="texMathInline">x = r \cos \theta</span> and <span class="texMathInline">y = r\sin\theta</span></p><p><span class="texMathDisplay">\begin{align*}
+x^2 + y^2 &amp;= 1 \\
+(r\cos\theta)^2 + (r\sin\theta)^2 &amp;= 1 \\
+r^2\cos^2\theta + r^2\sin^2\theta &amp;= 1 \\
+r^2(\cos^2\theta + \sin^2\theta) &amp;= 1 \\
+r^2(1) &amp;= 1 \\
+r^2 &amp;= 1 \\
+r &amp;= 1
+\end{align*}</span></p><p>So the unit circle <span class="texMathInline">x^2+y^2=1</span> corresponds simply to <span class="texMathInline">r = 1</span> in polar coordinates.</p><p>Example 2: Polar to Cartesian</p><p>Convert <span class="texMathInline">r = \sin\theta</span> to Cartesian coordinates.</p><p>Multiply both sides by <span class="texMathInline">r</span>:</p><p><span class="texMathDisplay">\begin{align*}
+r &amp;= \sin\theta \\
+r^2 &amp;= r\sin\theta
+\end{align*}</span></p><p>Now use <span class="texMathInline">r^2 = x^2+y^2</span> and <span class="texMathInline">y = r\sin\theta</span>:
+<span class="texMathDisplay">\begin{align*}
+x^2 + y^2 &amp;= y
+\end{align*}</span></p><p>Complete the square in <span class="texMathInline">y</span>:
+<span class="texMathDisplay">\begin{align*}
+x^2 + y^2 - y &amp;= 0 \\
+x^2 + \left(y - \tfrac{1}{2}\right)^2 &amp;= \tfrac{1}{4}
+\end{align*}</span></p><p>This is a circle of radius <span class="texMathInline">\tfrac{1}{2}</span> centered at <span class="texMathInline">\left(0, \tfrac{1}{2}\right)</span>.</p></section><section class="SsectionLevel2" id="section 3"><h2 class="heading">3<span class="stt">&nbsp;</span><a name="(part._.Circle)"></a>Circle<span class="button-group"><a href="#(part._.Circle)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>Here&rsquo;s a circle <span class="texMathInline">r = 3\cos\theta</span> traced in the plane:</p><p><img src="circle.png" alt="A circle plotted in polar coordinates" width="500" height="500"/></p></section><section class="SsectionLevel2" id="section 4"><h2 class="heading">4<span class="stt">&nbsp;</span><a name="(part._.Cardioid)"></a>Cardioid<span class="button-group"><a href="#(part._.Cardioid)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>Here&rsquo;s a cardioid <span class="texMathInline">r = 1 + 2\sin\theta</span> traced in the plane:</p><p><img src="cardioid.png" alt="A cardioid plotted in polar coordinates" width="500" height="500"/></p></section><section class="SsectionLevel2" id="section 5"><h2 class="heading">5<span class="stt">&nbsp;</span><a name="(part._.Limason)"></a>Limason<span class="button-group"><a href="#(part._.Limason)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>Here&rsquo;s a Limason <span class="texMathInline">r = 2 + \sin\theta</span> traced in the plane:</p><p><img src="limason.png" alt="A limason plotted in polar coordinates" width="500" height="500"/></p></section><section class="SsectionLevel2" id="section 6"><h2 class="heading">6<span class="stt">&nbsp;</span><a name="(part._.Roses)"></a>Roses<span class="button-group"><a href="#(part._.Roses)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>Here&rsquo;s a three petal rose <span class="texMathInline">r = \sin 3\theta</span> traced in the plane:</p><p><img src="threepetal.png" alt="A three petal rose plotted in polar coordinates" width="500" height="500"/></p><p>Here&rsquo;s a four petal rose <span class="texMathInline">r = \cos 2\theta</span> traced in the plane:</p><p><img src="fourpetal.png" alt="A four petal rose plotted in polar coordinates" width="500" height="500"/></p></section><section class="SsectionLevel2" id="section 7"><h2 class="heading">7<span class="stt">&nbsp;</span><a name="(part._.Practice_your_graphing_skills)"></a>Practice your graphing skills<span class="button-group"><a href="#(part._.Practice_your_graphing_skills)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h2><p>On the following link <a href="polar_practice.html">Practice</a>
+you can practice your polar graphing skills</p></section></section></div></div><div id="contextindicator">&nbsp;</div></body></html>
