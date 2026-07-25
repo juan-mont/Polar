@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sector — Práctica de áreas polares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+  :root{
+    --ink: #0E1326;
+    --ink-2: #171F3B;
+    --paper: #F6F1E3;
+    --paper-2: #EFE7D3;
+    --text: #241F1A;
+    --text-soft: #5B564C;
+    --copper: #B5541F;
+    --copper-deep: #8E3F16;
+    --sage: #4B7A5D;
+    --sage-deep: #345841;
+    --brick: #A8384A;
+    --brick-deep: #7E2635;
+    --grid-dark: #2A3358;
+    --grid-paper: #D9CEB0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 50% 50%, transparent 0, transparent 40px),
+      repeating-radial-gradient(circle at 15% 20%, transparent 0 60px, rgba(255,255,255,0.02) 60px 61px),
+      repeating-radial-gradient(circle at 15% 20%, transparent 0 120px, rgba(255,255,255,0.03) 120px 121px);
+    padding: 40px 16px 64px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 700px;
+  }
+
+  /* ---------- Header ---------- */
+  .masthead {
+    text-align: center;
+    color: var(--paper);
+    margin-bottom: 28px;
+  }
+  .masthead .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8C93B8;
+  }
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(28px, 5vw, 40px);
+    margin: 6px 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .masthead p {
+    color: #A7ACC9;
+    font-size: 14.5px;
+    margin: 0;
+  }
+
+  /* ---------- Progress dial ---------- */
+  .dial-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 26px 0 8px;
+  }
+  .dial-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    fill: #C9CEE8;
+  }
+  .wedge {
+    stroke: var(--ink);
+    stroke-width: 2;
+    transition: fill 0.5s ease;
+  }
+  .wedge.pending { fill: #232B4D; }
+  .wedge.correct { fill: var(--sage); }
+  .wedge.wrong { fill: var(--brick); }
+  .wedge.active { fill: var(--copper); }
+
+  /* ---------- Card ---------- */
+  .card {
+    background: var(--paper);
+    border-radius: 4px;
+    padding: 40px 36px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.55);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(90,80,60,0.05) 27px, rgba(90,80,60,0.05) 28px);
+  }
+
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--copper-deep);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .kicker .curve-type {
+    background: rgba(181,84,31,0.12);
+    padding: 3px 10px;
+    border-radius: 20px;
+    color: var(--copper-deep);
+  }
+
+  .equation-box {
+    background: var(--paper-2);
+    border-left: 3px solid var(--copper);
+    padding: 22px 24px;
+    border-radius: 2px;
+    margin-bottom: 22px;
+    font-size: 20px;
+    overflow-x: auto;
+  }
+
+  .prompt {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 22px;
+  }
+  .prompt b { color: var(--copper-deep); }
+
+  .answer-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 14px;
+  }
+  .answer-row input {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    padding: 12px 14px;
+    border: 2px solid #CFC3A4;
+    border-radius: 3px;
+    background: #FFFDF8;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .answer-row input:focus { border-color: var(--copper); }
+  .answer-row button, .action-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 3px;
+    background: var(--copper);
+    color: #FFF3E9;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .answer-row button:hover, .action-btn:hover { background: var(--copper-deep); }
+  .answer-row button:active, .action-btn:active { transform: scale(0.97); }
+  .answer-row button:disabled { background: #C9BFA6; cursor: not-allowed; }
+
+  .attempts {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+  }
+  .attempt-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #D9CEB0;
+    border: 1px solid #B7A97E;
+  }
+  .attempt-dot.used { background: var(--brick); border-color: var(--brick-deep); }
+
+  .feedback {
+    font-size: 14.5px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 3px;
+    margin: 10px 0 0;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { background: rgba(75,122,93,0.15); color: var(--sage-deep); }
+  .feedback.wrong { background: rgba(168,56,74,0.13); color: var(--brick-deep); }
+
+  /* ---------- Solution ---------- */
+  .solution {
+    margin-top: 26px;
+    border-top: 1px dashed #C9BC9A;
+    padding-top: 22px;
+    display: none;
+  }
+  .solution.show { display: block; animation: reveal 0.4s ease; }
+  @keyframes reveal { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
+  .solution h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    color: var(--copper-deep);
+  }
+  .step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .step .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #FFF3E9;
+    background: var(--ink-2);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step .content { flex: 1; }
+  .step .text { font-size: 14.5px; color: var(--text-soft); margin-bottom: 4px; }
+  .step .math { font-size: 16px; overflow-x: auto; }
+  .final-answer {
+    margin-top: 18px;
+    background: rgba(75,122,93,0.1);
+    border-left: 3px solid var(--sage);
+    padding: 14px 18px;
+    font-size: 16px;
+    border-radius: 2px;
+  }
+
+  .next-row {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* ---------- Intro / Results ---------- */
+  .center-card { text-align: center; }
+  .curve-gallery {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 26px;
+    flex-wrap: wrap;
+  }
+  .curve-gallery span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 1px solid #CFC3A4;
+    border-radius: 20px;
+    color: var(--text-soft);
+  }
+  .big-score {
+    font-family: 'Fraunces', serif;
+    font-size: 64px;
+    font-weight: 600;
+    color: var(--copper-deep);
+    line-height: 1;
+    margin: 6px 0 0;
+  }
+  .big-score span { font-size: 26px; color: var(--text-soft); }
+  .score-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-bottom: 20px;
+  }
+  .breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 18px 0 26px;
+  }
+  .breakdown .chip {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFF3E9;
+  }
+  .breakdown .chip.correct { background: var(--sage); }
+  .breakdown .chip.wrong { background: var(--brick); }
+
+  .grade-msg { font-size: 15px; color: var(--text); margin-bottom: 24px; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 520px) {
+    .card { padding: 28px 20px; }
+    .answer-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="masthead">
+    <div class="eyebrow">Cálculo · Coordenadas polares</div>
+    <h1>Sector</h1>
+    <p>Práctica de áreas encerradas por curvas polares — rosas, cardioides, círculos y limaçons</p>
+  </div>
+
+  <div class="dial-wrap">
+    <svg id="dial" width="180" height="180" viewBox="0 0 180 180"></svg>
+  </div>
+
+  <!-- INTRO -->
+  <div class="card center-card" id="screen-intro">
+    <div class="kicker" style="justify-content:center;">5 ejercicios · 3 intentos cada uno</div>
+    <p class="prompt" style="text-align:left;">
+      Vas a calcular el área encerrada por cinco curvas polares distintas: un <b>círculo</b>, una <b>cardioide</b>,
+      una <b>rosa</b> y dos <b>limaçons</b>. Para cada una, escribe el área redondeada a <b>centésimas</b>
+      (dos decimales). Si fallas, tienes hasta tres intentos; después —o en cuanto aciertes— verás el
+      procedimiento completo antes de pasar al siguiente ejercicio.
+    </p>
+    <div class="curve-gallery">
+      <span>Círculo</span><span>Cardioide</span><span>Rosa</span><span>Limaçon con lazo</span><span>Limaçon sin lazo</span>
+    </div>
+    <button class="action-btn" onclick="startDrill()">Empezar práctica</button>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="card hidden" id="screen-question">
+    <div class="kicker">
+      <span id="q-label">Ejercicio 1 de 5</span>
+      <span class="curve-type" id="q-curvetype">Círculo</span>
+    </div>
+    <div class="equation-box" id="q-equation"></div>
+    <div class="prompt" id="q-prompt"></div>
+
+    <div class="attempts" id="q-attempts"></div>
+    <div class="answer-row">
+      <input type="text" id="q-input" placeholder="Área ≈ 0.00" inputmode="decimal" autocomplete="off">
+      <button id="q-submit" onclick="submitAnswer()">Comprobar</button>
+    </div>
+    <div class="feedback" id="q-feedback"></div>
+
+    <div class="solution" id="q-solution">
+      <h3>Procedimiento</h3>
+      <div id="q-steps"></div>
+      <div class="final-answer" id="q-finalanswer"></div>
+      <div class="next-row">
+        <button class="action-btn" onclick="nextQuestion()" id="q-next-btn">Siguiente ejercicio →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card center-card hidden" id="screen-results">
+    <div class="kicker" style="justify-content:center;">Resultados</div>
+    <div class="big-score"><span id="r-correct">0</span><span> / 5 correctas</span></div>
+    <div class="score-sub" id="r-grade-line">Calificación: 0 / 100</div>
+    <div class="breakdown" id="r-breakdown"></div>
+    <div class="grade-msg" id="r-message"></div>
+    <button class="action-btn" onclick="restartDrill()">Repetir práctica</button>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   PROBLEM BANK
+--------------------------------------------------------- */
+const problems = [
+  {
+    type: "Círculo",
+    equation: "r = 3\\cos\\theta",
+    prompt: "Calcula el área total encerrada por el círculo completo trazado por esta ecuación.",
+    answer: 9 * Math.PI / 4,
+    steps: [
+      { text: "La curva r = 3cos θ es un círculo de radio 3/2 que se traza por completo cuando θ recorre −π/2 a π/2.",
+        math: "r=3\\cos\\theta,\\qquad \\theta\\in\\left[-\\tfrac{\\pi}{2},\\ \\tfrac{\\pi}{2}\\right]" },
+      { text: "Se aplica la fórmula del área en polares.",
+        math: "A=\\frac{1}{2}\\int_{\\alpha}^{\\beta} r^{2}\\,d\\theta" },
+      { text: "Se sustituye r y se eleva al cuadrado.",
+        math: "A=\\frac{1}{2}\\int_{-\\pi/2}^{\\pi/2} (3\\cos\\theta)^{2}\\,d\\theta=\\frac{9}{2}\\int_{-\\pi/2}^{\\pi/2}\\cos^{2}\\theta\\,d\\theta" },
+      { text: "Se usa la identidad de reducción de potencia cos²θ = (1+cos 2θ)/2.",
+        math: "A=\\frac{9}{4}\\int_{-\\pi/2}^{\\pi/2}\\left(1+\\cos 2\\theta\\right)d\\theta" },
+      { text: "Se integra término a término.",
+        math: "A=\\frac{9}{4}\\left[\\theta+\\frac{\\sin 2\\theta}{2}\\right]_{-\\pi/2}^{\\pi/2}" },
+      { text: "Se evalúa en los límites (los términos con seno se anulan).",
+        math: "A=\\frac{9}{4}\\left[\\left(\\frac{\\pi}{2}+0\\right)-\\left(-\\frac{\\pi}{2}+0\\right)\\right]=\\frac{9}{4}\\cdot\\pi=\\frac{9\\pi}{4}" }
+    ],
+    finalLatex: "A=\\dfrac{9\\pi}{4}\\approx 7.07\\ \\text{unidades}^2"
+  },
+  {
+    type: "Cardioide",
+    equation: "r = 1 + \\cos\\theta",
+    prompt: "Calcula el área total encerrada por la cardioide completa.",
+    answer: 3 * Math.PI / 2,
+    steps: [
+      { text: "La cardioide se traza una sola vez cuando θ recorre todo el intervalo de 0 a 2π.",
+        math: "r=1+\\cos\\theta,\\qquad \\theta\\in[0,2\\pi]" },
+      { text: "Se plantea la integral de área.",
+        math: "A=\\frac{1}{2}\\int_{0}^{2\\pi}(1+\\cos\\theta)^{2}\\,d\\theta" },
+      { text: "Se expande el binomio y se reduce cos²θ con la identidad de ángulo doble.",
+        math: "(1+\\cos\\theta)^2=1+2\\cos\\theta+\\cos^2\\theta=\\frac{3}{2}+2\\cos\\theta+\\frac{\\cos 2\\theta}{2}" },
+      { text: "Se integra cada término de 0 a 2π; los términos con seno se anulan en el periodo completo.",
+        math: "A=\\frac{1}{2}\\left[\\frac{3}{2}\\theta+2\\sin\\theta+\\frac{\\sin 2\\theta}{4}\\right]_{0}^{2\\pi}=\\frac{1}{2}(3\\pi)" },
+      { text: "Se simplifica el resultado final.",
+        math: "A=\\frac{3\\pi}{2}" }
+    ],
+    finalLatex: "A=\\dfrac{3\\pi}{2}\\approx 4.71\\ \\text{unidades}^2"
+  },
+  {
+    type: "Rosa",
+    equation: "r = \\cos(3\\theta)",
+    prompt: "Calcula el área de <b>un solo pétalo</b> de esta rosa de tres pétalos.",
+    answer: Math.PI / 12,
+    steps: [
+      { text: "Un pétalo empieza y termina donde r = 0. Se resuelve cos(3θ) = 0.",
+        math: "\\cos(3\\theta)=0 \\;\\Rightarrow\\; 3\\theta=\\pm\\frac{\\pi}{2} \\;\\Rightarrow\\; \\theta=\\pm\\frac{\\pi}{6}" },
+      { text: "El pétalo queda descrito en el intervalo θ ∈ [−π/6, π/6]; se plantea el área.",
+        math: "A=\\frac{1}{2}\\int_{-\\pi/6}^{\\pi/6}\\cos^{2}(3\\theta)\\,d\\theta" },
+      { text: "Se reduce cos²(3θ) con la identidad de ángulo doble.",
+        math: "\\cos^{2}(3\\theta)=\\frac{1+\\cos 6\\theta}{2}" },
+      { text: "Se integra término a término.",
+        math: "A=\\frac{1}{4}\\left[\\theta+\\frac{\\sin 6\\theta}{6}\\right]_{-\\pi/6}^{\\pi/6}" },
+      { text: "Se evalúa: en ±π/6, sin(6θ) = sin(±π) = 0, así que solo sobrevive el término en θ.",
+        math: "A=\\frac{1}{4}\\left[\\left(\\frac{\\pi}{6}\\right)-\\left(-\\frac{\\pi}{6}\\right)\\right]=\\frac{1}{4}\\cdot\\frac{\\pi}{3}=\\frac{\\pi}{12}" }
+    ],
+    finalLatex: "A=\\dfrac{\\pi}{12}\\approx 0.26\\ \\text{unidades}^2"
+  },
+  {
+    type: "Limaçon (con lazo)",
+    equation: "r = 1 + 2\\cos\\theta",
+    prompt: "Este limaçon tiene un lazo interior. Calcula el área encerrada por el <b>lazo interior</b> (no la región exterior).",
+    answer: Math.PI - (3 * Math.sqrt(3)) / 2,
+    steps: [
+      { text: "El lazo interior ocurre donde r se anula. Se resuelve 1 + 2cos θ = 0.",
+        math: "1+2\\cos\\theta=0 \\;\\Rightarrow\\; \\cos\\theta=-\\frac{1}{2} \\;\\Rightarrow\\; \\theta=\\frac{2\\pi}{3},\\ \\frac{4\\pi}{3}" },
+      { text: "El lazo interior se traza cuando θ va de 2π/3 a 4π/3 (ahí r es negativo, lo que forma el lazo).",
+        math: "A=\\frac{1}{2}\\int_{2\\pi/3}^{4\\pi/3}(1+2\\cos\\theta)^{2}\\,d\\theta" },
+      { text: "Se expande el binomio y se reduce cos²θ.",
+        math: "(1+2\\cos\\theta)^2=1+4\\cos\\theta+4\\cos^2\\theta=3+4\\cos\\theta+2\\cos 2\\theta" },
+      { text: "Se integra término a término.",
+        math: "A=\\frac{1}{2}\\Big[3\\theta+4\\sin\\theta+\\sin 2\\theta\\Big]_{2\\pi/3}^{4\\pi/3}" },
+      { text: "Se evalúa en θ = 4π/3 y θ = 2π/3 usando sin(4π/3) = −√3/2, sin(8π/3) = √3/2, sin(2π/3) = √3/2, sin(4π/3) = −√3/2.",
+        math: "\\left[4\\pi-2\\sqrt3+\\tfrac{\\sqrt3}{2}\\right]-\\left[2\\pi+2\\sqrt3-\\tfrac{\\sqrt3}{2}\\right]=2\\pi-3\\sqrt3" },
+      { text: "Se multiplica por el factor 1/2 de la fórmula de área.",
+        math: "A=\\frac{1}{2}\\left(2\\pi-3\\sqrt3\\right)=\\pi-\\frac{3\\sqrt3}{2}" }
+    ],
+    finalLatex: "A=\\pi-\\dfrac{3\\sqrt3}{2}\\approx 0.54\\ \\text{unidades}^2"
+  },
+  {
+    type: "Limaçon (sin lazo)",
+    equation: "r = 2 + \\cos\\theta",
+    prompt: "Este limaçon no tiene lazo interior (r nunca es negativo). Calcula el área total que encierra.",
+    answer: 9 * Math.PI / 2,
+    steps: [
+      { text: "Como r = 2 + cos θ ≥ 1 para todo θ, la curva se traza una sola vez y por completo en θ ∈ [0, 2π].",
+        math: "r=2+\\cos\\theta,\\qquad \\theta\\in[0,2\\pi]" },
+      { text: "Se plantea la integral de área.",
+        math: "A=\\frac{1}{2}\\int_{0}^{2\\pi}(2+\\cos\\theta)^{2}\\,d\\theta" },
+      { text: "Se expande el binomio y se reduce cos²θ.",
+        math: "(2+\\cos\\theta)^2=4+4\\cos\\theta+\\cos^2\\theta=\\frac{9}{2}+4\\cos\\theta+\\frac{\\cos 2\\theta}{2}" },
+      { text: "Se integra de 0 a 2π; los términos con seno se anulan en el periodo completo.",
+        math: "A=\\frac{1}{2}\\left[\\frac{9}{2}\\theta+4\\sin\\theta+\\frac{\\sin 2\\theta}{4}\\right]_{0}^{2\\pi}=\\frac{1}{2}(9\\pi)" },
+      { text: "Se simplifica el resultado final.",
+        math: "A=\\frac{9\\pi}{2}" }
+    ],
+    finalLatex: "A=\\dfrac{9\\pi}{2}\\approx 14.14\\ \\text{unidades}^2"
+  }
+];
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+let current = 0;
+let attemptsLeft = 3;
+let results = []; // "correct" | "wrong" per question, in order
+let solved = false;
+
+/* ---------------------------------------------------------
+   DIAL (5 wedges = 5 exercises, literal polar-sector progress)
+--------------------------------------------------------- */
+function polarToXY(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+function wedgePath(cx, cy, rOuter, rInner, startDeg, endDeg) {
+  const [x1, y1] = polarToXY(cx, cy, rOuter, startDeg);
+  const [x2, y2] = polarToXY(cx, cy, rOuter, endDeg);
+  const [x3, y3] = polarToXY(cx, cy, rInner, endDeg);
+  const [x4, y4] = polarToXY(cx, cy, rInner, startDeg);
+  const large = (endDeg - startDeg) > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${large} 0 ${x4} ${y4} Z`;
+}
+function renderDial() {
+  const svg = document.getElementById('dial');
+  svg.innerHTML = '';
+  const cx = 90, cy = 90, rOuter = 74, rInner = 30;
+  for (let i = 0; i < 5; i++) {
+    const startDeg = i * 72;
+    const endDeg = startDeg + 72;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', wedgePath(cx, cy, rOuter, rInner, startDeg + 2, endDeg - 2));
+    let cls = 'wedge pending';
+    if (i < results.length) cls = 'wedge ' + results[i];
+    else if (i === current) cls = 'wedge active';
+    path.setAttribute('class', cls);
+    svg.appendChild(path);
+
+    const [lx, ly] = polarToXY(cx, cy, (rOuter + rInner) / 2, startDeg + 36);
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', lx);
+    label.setAttribute('y', ly + 4);
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('class', 'dial-label');
+    label.textContent = (i + 1);
+    svg.appendChild(label);
+  }
+  const centerLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  centerLabel.setAttribute('x', cx);
+  centerLabel.setAttribute('y', cy + 5);
+  centerLabel.setAttribute('text-anchor', 'middle');
+  centerLabel.setAttribute('class', 'dial-label');
+  centerLabel.setAttribute('style', 'font-size:20px; fill:#F6F1E3;');
+  centerLabel.textContent = results.length + '/5';
+  svg.appendChild(centerLabel);
+}
+
+/* ---------------------------------------------------------
+   FLOW
+--------------------------------------------------------- */
+function show(id) {
+  ['screen-intro', 'screen-question', 'screen-results'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+function startDrill() {
+  current = 0;
+  results = [];
+  renderDial();
+  loadQuestion();
+  show('screen-question');
+}
+
+function restartDrill() {
+  current = 0;
+  results = [];
+  renderDial();
+  show('screen-intro');
+}
+
+function loadQuestion() {
+  attemptsLeft = 3;
+  solved = false;
+  const p = problems[current];
+
+  document.getElementById('q-label').textContent = `Ejercicio ${current + 1} de 5`;
+  document.getElementById('q-curvetype').textContent = p.type;
+  katex.render(p.equation, document.getElementById('q-equation'), { throwOnError: false, displayMode: true });
+  document.getElementById('q-prompt').innerHTML = p.prompt + ' Escribe el área redondeada a <b>centésimas</b>.';
+
+  document.getElementById('q-input').value = '';
+  document.getElementById('q-input').disabled = false;
+  document.getElementById('q-submit').disabled = false;
+  document.getElementById('q-submit').textContent = 'Comprobar';
+
+  const fb = document.getElementById('q-feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+
+  document.getElementById('q-solution').classList.remove('show');
+
+  renderAttempts();
+  renderDial();
+
+  setTimeout(() => document.getElementById('q-input').focus(), 50);
+}
+
+function renderAttempts() {
+  const wrap = document.getElementById('q-attempts');
+  wrap.innerHTML = 'Intentos: ';
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'attempt-dot' + (i < (3 - attemptsLeft) ? ' used' : '');
+    wrap.appendChild(dot);
+  }
+}
+
+function submitAnswer() {
+  if (solved) return;
+  const input = document.getElementById('q-input');
+  const raw = input.value.trim().replace(',', '.');
+  const val = parseFloat(raw);
+  const fb = document.getElementById('q-feedback');
+
+  if (isNaN(val)) {
+    fb.className = 'feedback wrong show';
+    fb.textContent = 'Escribe un número válido, por ejemplo 4.71';
+    return;
+  }
+
+  const p = problems[current];
+  const correctRounded = Math.round(p.answer * 100) / 100;
+  const isCorrect = Math.abs(val - correctRounded) < 0.005;
+
+  if (isCorrect) {
+    fb.className = 'feedback correct show';
+    fb.textContent = '¡Correcto! Así se llega al resultado:';
+    finishQuestion('correct');
+  } else {
+    attemptsLeft--;
+    renderAttempts();
+    if (attemptsLeft > 0) {
+      fb.className = 'feedback wrong show';
+      fb.textContent = `Incorrecto. Te ${attemptsLeft === 1 ? 'queda 1 intento' : 'quedan ' + attemptsLeft + ' intentos'}.`;
+      input.select();
+    } else {
+      fb.className = 'feedback wrong show';
+      fb.textContent = 'Sin intentos restantes. Este es el procedimiento correcto:';
+      finishQuestion('wrong');
+    }
+  }
+}
+
+function finishQuestion(outcome) {
+  solved = true;
+  results.push(outcome);
+  document.getElementById('q-input').disabled = true;
+  document.getElementById('q-submit').disabled = true;
+  document.getElementById('q-submit').textContent = outcome === 'correct' ? 'Resuelto' : 'Agotado';
+  renderSolution();
+  renderDial();
+
+  if (current === 4) {
+    document.getElementById('q-next-btn').textContent = 'Ver resultados →';
+  } else {
+    document.getElementById('q-next-btn').textContent = 'Siguiente ejercicio →';
+  }
+}
+
+function renderSolution() {
+  const p = problems[current];
+  const stepsWrap = document.getElementById('q-steps');
+  stepsWrap.innerHTML = '';
+  p.steps.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'step';
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = i + 1;
+    const content = document.createElement('div');
+    content.className = 'content';
+    const text = document.createElement('div');
+    text.className = 'text';
+    text.textContent = s.text;
+    const math = document.createElement('div');
+    math.className = 'math';
+    content.appendChild(text);
+    content.appendChild(math);
+    row.appendChild(num);
+    row.appendChild(content);
+    stepsWrap.appendChild(row);
+    katex.render(s.math, math, { throwOnError: false, displayMode: true });
+  });
+  katex.render(p.finalLatex, document.getElementById('q-finalanswer'), { throwOnError: false, displayMode: true });
+  document.getElementById('q-solution').classList.add('show');
+}
+
+function nextQuestion() {
+  if (current < 4) {
+    current++;
+    loadQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  const correctCount = results.filter(r => r === 'correct').length;
+  const grade = Math.round((correctCount / 5) * 100);
+
+  document.getElementById('r-correct').textContent = correctCount;
+  document.getElementById('r-grade-line').textContent = `Calificación: ${grade} / 100`;
+
+  const breakdown = document.getElementById('r-breakdown');
+  breakdown.innerHTML = '';
+  results.forEach((r, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip ' + r;
+    chip.textContent = i + 1;
+    breakdown.appendChild(chip);
+  });
+
+  const msgEl = document.getElementById('r-message');
+  let msg;
+  if (correctCount === 5) msg = 'Perfecto — dominas la fórmula A = ½∫r²dθ en los cuatro tipos de curva.';
+  else if (correctCount >= 3) msg = 'Buen trabajo. Repasa el procedimiento de las que fallaste y vuelve a intentarlo.';
+  else msg = 'Vale la pena repasar los límites de integración de cada tipo de curva antes de otro intento.';
+  msgEl.textContent = msg;
+
+  renderDial();
+  show('screen-results');
+}
+
+document.getElementById('q-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !solved) submitAnswer();
+});
+
+renderDial();
+</script>
+</body>
+</html>
