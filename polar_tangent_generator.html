@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendiente de Ecuación Polar - AP Calculus BC</title>
+    
+    <!-- Configuración de MathJax para renderizar delimitadores $ y $$ -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            --accent-amber: #fbbf24;
+            --border-color: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: var(--accent-blue);
+        }
+
+        .lang-btn {
+            background: #334155;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .setup-screen, .quiz-screen, .report-screen {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #0f172a;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background: var(--accent-blue);
+            color: #0f172a;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #334155;
+            border-radius: 8px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-blue);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .problem-card {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .problem-card h3 {
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .latex-box {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .layout-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .canvas-container {
+            background: #0f172a;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        canvas {
+            background: #1e293b;
+            border-radius: 8px;
+            max-width: 100%;
+        }
+
+        .feedback-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            display: block;
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .feedback-box.warning {
+            display: block;
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .feedback-box.incorrect {
+            display: block;
+            background: rgba(248, 113, 113, 0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .steps-container {
+            margin-top: 15px;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .steps-container h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+        }
+
+        .report-summary {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .report-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            margin: 10px 0;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .report-table th, .report-table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .report-table th {
+            background: #0f172a;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="appTitle">AP Calculus BC: Pendientes Polares</h1>
+        <button class="lang-btn" onclick="toggleLanguage()" id="langBtn">English</button>
+    </header>
+
+    <div class="container">
+        <!-- SETUP SCREEN -->
+        <div id="setupScreen" class="setup-screen active">
+            <h2 style="margin-bottom: 15px;" id="setupHeading">Configuración de la Práctica</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;" id="setupDesc">
+                Practica la obtención de la pendiente de la recta tangente $\frac{dy}{dx}$ a funciones polares en un valor dado de $\theta$.
+            </p>
+
+            <div class="form-group">
+                <label id="lblNumQuestions">Número de ejercicios (1 - 10):</label>
+                <input type="number" id="numQuestionsInput" min="1" max="10" value="3">
+            </div>
+
+            <button class="btn" onclick="startPractice()" id="btnStart">Iniciar Práctica</button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quizScreen" class="quiz-screen">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="quiz-header">
+                <span id="questionTracker">Ejercicio 1 de 3</span>
+                <span id="scoreTracker" style="color: var(--accent-green); font-weight: bold;">Aciertos: 0</span>
+            </div>
+
+            <div class="layout-grid">
+                <div>
+                    <div class="problem-card">
+                        <h3 id="lblCurveType">Curva Polar</h3>
+                        <div class="latex-box" id="polarEquationDisplay"></div>
+                        <div class="latex-box" id="thetaDisplay"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lblInputAnswer">Ingresa el valor de $\frac{dy}{dx}$ (a 3 decimales):</label>
+                        <input type="number" step="0.001" id="userAnswerInput" placeholder="Ejemplo: -1.732">
+                    </div>
+
+                    <button class="btn" id="btnSubmit" onclick="checkAnswer()">Validar Respuesta</button>
+
+                    <div id="feedbackBox" class="feedback-box"></div>
+
+                    <div id="stepsContainer" class="steps-container">
+                        <h4 id="lblStepsTitle">Paso a paso de la Solución:</h4>
+                        <div id="stepsContent"></div>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <h3 style="margin-bottom: 10px; color: var(--text-muted);" id="lblGraphTitle">Gráfica Polar</h3>
+                    <canvas id="polarCanvas" width="340" height="340"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORT SCREEN -->
+        <div id="reportScreen" class="report-screen">
+            <h2 id="reportHeading" style="text-align: center;">Reporte de Evidencia de Aprendizaje</h2>
+            <div class="report-summary">
+                <p id="lblFinalScoreText" style="color: var(--text-muted);">Aciertos Totales:</p>
+                <div class="report-score" id="reportScore">0 / 3</div>
+                <p id="reportPercentage" style="font-size: 1.2rem; color: var(--accent-green);"></p>
+            </div>
+
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th id="thEq">Ecuación Polar</th>
+                        <th id="thTheta">$\theta$</th>
+                        <th id="thSlope">Pendiente Real</th>
+                        <th id="thResult">Resultado</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody"></tbody>
+            </table>
+
+            <button class="btn" onclick="resetApp()" style="margin-top: 25px;" id="btnRestart">Generar Nuevos Ejercicios</button>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            es: {
+                appTitle: "AP Calculus BC: Pendientes Polares",
+                langBtn: "English",
+                setupHeading: "Configuración de la Práctica",
+                setupDesc: "Practica la obtención de la pendiente de la recta tangente $\\frac{dy}{dx}$ a funciones polares en un valor dado de $\\theta$.",
+                lblNumQuestions: "Número de ejercicios (1 - 10):",
+                btnStart: "Iniciar Práctica",
+                lblCurveType: "Tipo de Curva",
+                lblInputAnswer: "Ingresa el valor de $\\frac{dy}{dx}$ (a 3 decimales):",
+                btnSubmit: "Validar Respuesta",
+                lblGraphTitle: "Gráfica Polar y Recta Tangente",
+                lblStepsTitle: "Solución Paso a Paso:",
+                reportHeading: "Reporte de Aprendizaje",
+                lblFinalScoreText: "Aciertos Totales:",
+                thEq: "Ecuación Polar",
+                thTheta: "$\\theta$",
+                thSlope: "Pendiente Real",
+                thResult: "Resultado",
+                btnRestart: "Generar Nuevos Ejercicios",
+                correctFeedback: "¡Correcto! Excelente trabajo.",
+                attempt1Incorrect: "Incorrecto (Intento 1). Revisa la fórmula general e inténtalo nuevamente.",
+                attempt2Incorrect: "Incorrecto (Intento 2). Revisa la solución detallada abajo.",
+                nextQuestion: "Siguiente Ejercicio",
+                viewReport: "Ver Reporte Final",
+                circle: "Círculo",
+                cardioid: "Cardioide",
+                rose: "Flor (Rosa Polar)",
+                limacon: "Caracol con Rizo Interior"
+            },
+            en: {
+                appTitle: "AP Calculus BC: Polar Slope Practice",
+                langBtn: "Español",
+                setupHeading: "Practice Setup",
+                setupDesc: "Practice finding the slope of the tangent line $\\frac{dy}{dx}$ for polar equations at a specific $\\theta$.",
+                lblNumQuestions: "Number of exercises (1 - 10):",
+                btnStart: "Start Practice",
+                lblCurveType: "Curve Type",
+                lblInputAnswer: "Enter slope value $\\frac{dy}{dx}$ (to 3 decimals):",
+                btnSubmit: "Submit Answer",
+                lblGraphTitle: "Polar Graph & Tangent Line",
+                lblStepsTitle: "Step-by-Step Solution:",
+                reportHeading: "Learning Report",
+                lblFinalScoreText: "Total Score:",
+                thEq: "Polar Equation",
+                thTheta: "$\\theta$",
+                thSlope: "Actual Slope",
+                thResult: "Result",
+                btnRestart: "Generate New Exercises",
+                correctFeedback: "Correct! Great job.",
+                attempt1Incorrect: "Incorrect (Attempt 1). Check the polar slope formula and try again.",
+                attempt2Incorrect: "Incorrect (Attempt 2). Check the full solution below.",
+                nextQuestion: "Next Question",
+                viewReport: "View Final Report",
+                circle: "Circle",
+                cardioid: "Cardioid",
+                rose: "Rose Curve",
+                limacon: "Inner-loop Limaçon"
+            }
+        };
+
+        let currentLang = 'es';
+        let totalQuestions = 3;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let attempt = 1;
+        let exercises = [];
+        let currentExercise = null;
+        let exerciseResults = [];
+
+        const thetaAngles = [
+            { label: "\\frac{\\pi}{6}", val: Math.PI / 6 },
+            { label: "\\frac{\\pi}{4}", val: Math.PI / 4 },
+            { label: "\\frac{\\pi}{3}", val: Math.PI / 3 },
+            { label: "\\frac{\\pi}{2}", val: Math.PI / 2 },
+            { label: "\\frac{2\\pi}{3}", val: (2 * Math.PI) / 3 },
+            { label: "\\frac{3\\pi}{4}", val: (3 * Math.PI) / 4 },
+            { label: "\\frac{5\\pi}{6}", val: (5 * Math.PI) / 6 },
+            { label: "\\frac{7\\pi}{6}", val: (7 * Math.PI) / 6 },
+            { label: "\\frac{5\\pi}{4}", val: (5 * Math.PI) / 4 },
+            { label: "\\frac{4\\pi}{3}", val: (4 * Math.PI) / 3 },
+            { label: "\\frac{5\\pi}{3}", val: (5 * Math.PI) / 3 },
+            { label: "\\frac{7\\pi}{4}", val: (7 * Math.PI) / 4 },
+            { label: "\\frac{11\\pi}{6}", val: (11 * Math.PI) / 6 }
+        ];
+
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+            }
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'es' ? 'en' : 'es';
+            updateLanguageUI();
+        }
+
+        function updateLanguageUI() {
+            const lang = i18n[currentLang];
+            document.getElementById('appTitle').innerText = lang.appTitle;
+            document.getElementById('langBtn').innerText = lang.langBtn;
+            document.getElementById('setupHeading').innerText = lang.setupHeading;
+            document.getElementById('setupDesc').innerHTML = lang.setupDesc;
+            document.getElementById('lblNumQuestions').innerText = lang.lblNumQuestions;
+            document.getElementById('btnStart').innerText = lang.btnStart;
+            document.getElementById('lblInputAnswer').innerHTML = lang.lblInputAnswer;
+            document.getElementById('lblGraphTitle').innerText = lang.lblGraphTitle;
+            document.getElementById('lblStepsTitle').innerText = lang.lblStepsTitle;
+            document.getElementById('reportHeading').innerText = lang.reportHeading;
+            document.getElementById('lblFinalScoreText').innerText = lang.lblFinalScoreText;
+            document.getElementById('thEq').innerText = lang.thEq;
+            document.getElementById('thTheta').innerHTML = lang.thTheta;
+            document.getElementById('thSlope').innerHTML = lang.thSlope;
+            document.getElementById('thResult').innerText = lang.thResult;
+            document.getElementById('btnRestart').innerText = lang.btnRestart;
+
+            if (currentExercise) {
+                document.getElementById('lblCurveType').innerText = lang[currentExercise.typeKey];
+            }
+            triggerMathJax();
+        }
+
+        function generateExercise() {
+            const types = ['circle', 'cardioid', 'rose', 'limacon'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            const angleObj = thetaAngles[Math.floor(Math.random() * thetaAngles.length)];
+            const thetaVal = angleObj.val;
+            const thetaLabel = angleObj.label;
+
+            let rFunc, drFunc, latexR, latexDr, typeKey;
+
+            if (type === 'circle') {
+                typeKey = 'circle';
+                const a = [2, 3, 4][Math.floor(Math.random() * 3)];
+                latexR = `${a}\\cos(\\theta)`;
+                latexDr = `-${a}\\sin(\\theta)`;
+                rFunc = (t) => a * Math.cos(t);
+                drFunc = (t) => -a * Math.sin(t);
+            } else if (type === 'cardioid') {
+                typeKey = 'cardioid';
+                const a = [2, 3][Math.floor(Math.random() * 2)];
+                latexR = `${a} + ${a}\\cos(\\theta)`;
+                latexDr = `-${a}\\sin(\\theta)`;
+                rFunc = (t) => a + a * Math.cos(t);
+                drFunc = (t) => -a * Math.sin(t);
+            } else if (type === 'rose') {
+                typeKey = 'rose';
+                const a = [2, 3][Math.floor(Math.random() * 2)];
+                const n = 2;
+                latexR = `${a}\\cos(${n}\\theta)`;
+                latexDr = `-${a * n}\\sin(${n}\\theta)`;
+                rFunc = (t) => a * Math.cos(n * t);
+                drFunc = (t) => -a * n * Math.sin(n * t);
+            } else { // Limacon inner loop (a < b)
+                typeKey = 'limacon';
+                const a = 1, b = 3;
+                latexR = `${a} + ${b}\\cos(\\theta)`;
+                latexDr = `-${b}\\sin(\\theta)`;
+                rFunc = (t) => a + b * Math.cos(t);
+                drFunc = (t) => -b * Math.sin(t);
+            }
+
+            const r_val = rFunc(thetaVal);
+            const dr_val = drFunc(thetaVal);
+            const dy_dtheta = dr_val * Math.sin(thetaVal) + r_val * Math.cos(thetaVal);
+            const dx_dtheta = dr_val * Math.cos(thetaVal) - r_val * Math.sin(thetaVal);
+
+            if (Math.abs(dx_dtheta) < 1e-4) return generateExercise();
+
+            return {
+                typeKey,
+                latexR,
+                latexDr,
+                rFunc,
+                drFunc,
+                thetaLabel,
+                thetaVal,
+                r_val,
+                dr_val,
+                dy_dtheta,
+                dx_dtheta,
+                slope: dy_dtheta / dx_dtheta
+            };
+        }
+
+        function startPractice() {
+            totalQuestions = parseInt(document.getElementById('numQuestionsInput').value) || 3;
+            score = 0;
+            currentQuestionIndex = 0;
+            exerciseResults = [];
+            exercises = [];
+
+            for (let i = 0; i < totalQuestions; i++) {
+                exercises.push(generateExercise());
+            }
+
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            attempt = 1;
+            currentQuestionIndex = index;
+            currentExercise = exercises[index];
+
+            document.getElementById('progressBar').style.width = `${((index) / totalQuestions) * 100}%`;
+            document.getElementById('questionTracker').innerText = `Ejercicio ${index + 1} de ${totalQuestions}`;
+            document.getElementById('scoreTracker').innerText = `Aciertos: ${score}`;
+
+            document.getElementById('lblCurveType').innerText = i18n[currentLang][currentExercise.typeKey];
+            document.getElementById('polarEquationDisplay').innerHTML = `$$r(\\theta) = ${currentExercise.latexR}$$`;
+            document.getElementById('thetaDisplay').innerHTML = `$$\\theta = ${currentExercise.thetaLabel}$$`;
+
+            document.getElementById('userAnswerInput').value = '';
+            document.getElementById('userAnswerInput').disabled = false;
+            document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('btnSubmit').innerText = i18n[currentLang].btnSubmit;
+            document.getElementById('btnSubmit').onclick = checkAnswer;
+
+            document.getElementById('feedbackBox').style.display = 'none';
+            document.getElementById('stepsContainer').style.display = 'none';
+
+            drawPolarCurve(currentExercise, false);
+            triggerMathJax();
+        }
+
+        function checkAnswer() {
+            const userVal = parseFloat(document.getElementById('userAnswerInput').value);
+            const feedbackBox = document.getElementById('feedbackBox');
+            const lang = i18n[currentLang];
+
+            if (isNaN(userVal)) {
+                alert("Por favor ingresa un número válido");
+                return;
+            }
+
+            const isCorrect = Math.abs(userVal - currentExercise.slope) <= 0.02;
+
+            if (isCorrect) {
+                score++;
+                exerciseResults.push({ eq: `r = ${currentExercise.latexR}`, theta: currentExercise.thetaLabel, slope: currentExercise.slope.toFixed(3), correct: true });
+                feedbackBox.className = 'feedback-box correct';
+                feedbackBox.innerHTML = `<strong>${lang.correctFeedback}</strong>`;
+                finishQuestionState();
+            } else {
+                if (attempt === 1) {
+                    attempt = 2;
+                    feedbackBox.className = 'feedback-box warning';
+                    feedbackBox.innerHTML = `<strong>${lang.attempt1Incorrect}</strong>`;
+                    renderFormulaHint();
+                    document.getElementById('stepsContainer').style.display = 'block';
+                } else {
+                    exerciseResults.push({ eq: `r = ${currentExercise.latexR}`, theta: currentExercise.thetaLabel, slope: currentExercise.slope.toFixed(3), correct: false });
+                    feedbackBox.className = 'feedback-box incorrect';
+                    feedbackBox.innerHTML = `<strong>${lang.attempt2Incorrect}</strong><br>Valor real: <b>${currentExercise.slope.toFixed(3)}</b>`;
+                    finishQuestionState();
+                }
+            }
+            triggerMathJax();
+        }
+
+        function finishQuestionState() {
+            document.getElementById('userAnswerInput').disabled = true;
+            document.getElementById('stepsContainer').style.display = 'block';
+            renderSteps();
+            drawPolarCurve(currentExercise, true);
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            if (currentQuestionIndex + 1 < totalQuestions) {
+                btnSubmit.innerText = i18n[currentLang].nextQuestion;
+                btnSubmit.onclick = () => loadQuestion(currentQuestionIndex + 1);
+            } else {
+                btnSubmit.innerText = i18n[currentLang].viewReport;
+                btnSubmit.onclick = showReport;
+            }
+            triggerMathJax();
+        }
+
+        function renderFormulaHint() {
+            document.getElementById('stepsContent').innerHTML = `
+                <p>Pista: Usa la fórmula de derivación paramétrica:</p>
+                $$\\frac{dy}{dx} = \\frac{\\frac{dr}{d\\theta}\\sin\\theta + r\\cos\\theta}{\\frac{dr}{d\\theta}\\cos\\theta - r\\sin\\theta}$$
+                <p>Donde $r'(\\theta) = ${currentExercise.latexDr}$</p>
+            `;
+        }
+
+        function renderSteps() {
+            const ex = currentExercise;
+            document.getElementById('stepsContent').innerHTML = `
+                <p><b>1. Derivada de $r(\\theta)$:</b> $r'(\\theta) = ${ex.latexDr}$</p>
+                <p><b>2. Expresión $\\frac{dy}{dx}$:</b></p>
+                $$\\frac{dy}{dx} = \\frac{(${ex.latexDr})\\sin\\theta + (${ex.latexR})\\cos\\theta}{(${ex.latexDr})\\cos\\theta - (${ex.latexR})\\sin\\theta}$$
+                <p><b>3. Evaluación en $\\theta = ${ex.thetaLabel}$:</b></p>
+                $$r = ${ex.r_val.toFixed(3)}, \\quad r' = ${ex.dr_val.toFixed(3)}$$
+                $$\\frac{dy}{dx} = \\frac{${ex.dy_dtheta.toFixed(3)}}{${ex.dx_dtheta.toFixed(3)}} = \\mathbf{${ex.slope.toFixed(3)}}$$
+            `;
+        }
+
+        function drawPolarCurve(ex, showTangent) {
+            const canvas = document.getElementById('polarCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width, height = canvas.height;
+            const cx = width / 2, cy = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+
+            let maxR = 0;
+            for (let t = 0; t <= 2 * Math.PI; t += 0.05) {
+                const r = Math.abs(ex.rFunc(t));
+                if (r > maxR) maxR = r;
+            }
+            const scale = (width / 2 - 30) / (maxR || 1);
+
+            // Ejes
+            ctx.strokeStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(0, cy); ctx.lineTo(width, cy);
+            ctx.moveTo(cx, 0); ctx.lineTo(cx, height);
+            ctx.stroke();
+
+            // Curva
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let t = 0; t <= 2 * Math.PI + 0.05; t += 0.02) {
+                const r = ex.rFunc(t);
+                const x = cx + r * Math.cos(t) * scale;
+                const y = cy - r * Math.sin(t) * scale;
+                if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Punto
+            const x0 = ex.r_val * Math.cos(ex.thetaVal);
+            const y0 = ex.r_val * Math.sin(ex.thetaVal);
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(cx + x0 * scale, cy - y0 * scale, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Tangente
+            if (showTangent) {
+                ctx.strokeStyle = '#4ade80';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                const dx = 2;
+                const yStart = y0 + ex.slope * (-dx);
+                const yEnd = y0 + ex.slope * (dx);
+                ctx.beginPath();
+                ctx.moveTo(cx + (x0 - dx) * scale, cy - yStart * scale);
+                ctx.lineTo(cx + (x0 + dx) * scale, cy - yEnd * scale);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        function showReport() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('reportScreen').classList.add('active');
+
+            document.getElementById('reportScore').innerText = `${score} / ${totalQuestions}`;
+            document.getElementById('reportPercentage').innerText = `${Math.round((score / totalQuestions) * 100)}% Exito`;
+
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+            exerciseResults.forEach((res, i) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>$${res.eq}$</td>
+                        <td>$${res.theta}$</td>
+                        <td><b>${res.slope}</b></td>
+                        <td style="color: ${res.correct ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                            ${res.correct ? '✓ Correcto' : '✗ Incorrecto'}
+                        </td>
+                    </tr>
+                `;
+            });
+            triggerMathJax();
+        }
+
+        function resetApp() {
+            document.getElementById('reportScreen').classList.remove('active');
+            document.getElementById('setupScreen').classList.add('active');
+        }
+
+        updateLanguageUI();
+    </script>
+</body>
+</html>
